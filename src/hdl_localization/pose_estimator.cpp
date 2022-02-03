@@ -15,8 +15,10 @@ namespace hdl_localization {
  * @param quat                initial orientation
  * @param cool_time_duration  during "cool time", prediction is not performed
  */
-PoseEstimator::PoseEstimator(pcl::Registration<PointT, PointT>::Ptr& registration, const ros::Time& stamp, const Eigen::Vector3f& pos, const Eigen::Quaternionf& quat, double cool_time_duration)
+PoseEstimator::PoseEstimator(pcl::Registration<PointT, PointT>::Ptr& registration, const rclcpp::Time& stamp, const Eigen::Vector3f& pos, const Eigen::Quaternionf& quat, double cool_time_duration)
     : init_stamp(stamp), registration(registration), cool_time_duration(cool_time_duration) {
+
+  prev_stamp = rclcpp::Time((int64_t)0, init_stamp.get_clock_type());
   last_observation = Eigen::Matrix4f::Identity();
   last_observation.block<3, 3>(0, 0) = quat.toRotationMatrix();
   last_observation.block<3, 1>(0, 3) = pos;
@@ -53,13 +55,13 @@ PoseEstimator::~PoseEstimator() {}
  * @param acc      acceleration
  * @param gyro     angular velocity
  */
-void PoseEstimator::predict(const ros::Time& stamp) {
-  if ((stamp - init_stamp).toSec() < cool_time_duration || prev_stamp.is_zero() || prev_stamp == stamp) {
+void PoseEstimator::predict(const rclcpp::Time& stamp) {
+  if ((stamp - init_stamp).seconds() < cool_time_duration || prev_stamp == rclcpp::Time((int64_t)0, prev_stamp.get_clock_type()) || prev_stamp == stamp) {
     prev_stamp = stamp;
     return;
   }
 
-  double dt = (stamp - prev_stamp).toSec();
+  double dt = (stamp - prev_stamp).seconds();
   prev_stamp = stamp;
 
   ukf->setProcessNoiseCov(process_noise * dt);
@@ -74,13 +76,13 @@ void PoseEstimator::predict(const ros::Time& stamp) {
  * @param acc      acceleration
  * @param gyro     angular velocity
  */
-void PoseEstimator::predict(const ros::Time& stamp, const Eigen::Vector3f& acc, const Eigen::Vector3f& gyro) {
-  if ((stamp - init_stamp).toSec() < cool_time_duration || prev_stamp.is_zero() || prev_stamp == stamp) {
+void PoseEstimator::predict(const rclcpp::Time& stamp, const Eigen::Vector3f& acc, const Eigen::Vector3f& gyro) {
+  if ((stamp - init_stamp).seconds() < cool_time_duration || prev_stamp == rclcpp::Time((int64_t)0, prev_stamp.get_clock_type()) || prev_stamp == stamp) {
     prev_stamp = stamp;
     return;
   }
 
-  double dt = (stamp - prev_stamp).toSec();
+  double dt = (stamp - prev_stamp).seconds();
   prev_stamp = stamp;
 
   ukf->setProcessNoiseCov(process_noise * dt);
@@ -133,7 +135,7 @@ void PoseEstimator::predict_odom(const Eigen::Matrix4f& odom_delta) {
  * @param cloud   input cloud
  * @return cloud aligned to the globalmap
  */
-pcl::PointCloud<PoseEstimator::PointT>::Ptr PoseEstimator::correct(const ros::Time& stamp, const pcl::PointCloud<PointT>::ConstPtr& cloud) {
+pcl::PointCloud<PoseEstimator::PointT>::Ptr PoseEstimator::correct(const rclcpp::Time& stamp, const pcl::PointCloud<PointT>::ConstPtr& cloud) {
   last_correction_stamp = stamp;
 
   Eigen::Matrix4f no_guess = last_observation;
@@ -209,7 +211,7 @@ pcl::PointCloud<PoseEstimator::PointT>::Ptr PoseEstimator::correct(const ros::Ti
 }
 
 /* getters */
-ros::Time PoseEstimator::last_correction_time() const {
+rclcpp::Time PoseEstimator::last_correction_time() const {
   return last_correction_stamp;
 }
 

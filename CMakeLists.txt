@@ -1,35 +1,25 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(hdl_localization)
 
-# -mavx causes a lot of errors!!
-if("$ENV{ROS_DISTRO}" STRGREATER "melodic")
-  add_definitions(-std=c++17 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2)
-  set(CMAKE_CXX_FLAGS "-std=c++17 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2")
-else()
-  add_definitions(-std=c++11 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2)
-  set(CMAKE_CXX_FLAGS "-std=c++11 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2")
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
-# pcl 1.7 causes a segfault when it is built with debug mode
-set(CMAKE_BUILD_TYPE "RELEASE")
-
-find_package(catkin REQUIRED COMPONENTS
-  nodelet
-  tf2
-  tf2_ros
-  tf2_eigen
-  tf2_geometry_msgs
-  eigen_conversions
-  pcl_ros
-  roscpp
-  rospy
-  sensor_msgs
-  geometry_msgs
-  message_generation
-  ndt_omp
-  fast_gicp
-  hdl_global_localization
-)
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(pcl_ros REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(ndt_omp REQUIRED)
+find_package(fast_gicp REQUIRED)
+find_package(hdl_global_localization REQUIRED)
 
 find_package(PCL 1.7 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
@@ -49,44 +39,68 @@ endif()
 ########################
 ## message generation ##
 ########################
-add_message_files(FILES
-  ScanMatchingStatus.msg
+rosidl_generate_interfaces(${PROJECT_NAME}
+  msg/ScanMatchingStatus.msg
+DEPENDENCIES
+  std_msgs
+  geometry_msgs
 )
-generate_messages(DEPENDENCIES std_msgs geometry_msgs)
-
-###################################
-## catkin specific configuration ##
-###################################
-catkin_package(
-  INCLUDE_DIRS include
-#  LIBRARIES hdl_scan_matching_odometry
-#  CATKIN_DEPENDS pcl_ros roscpp sensor_msgs
-#  DEPENDS system_lib
-)
+ament_export_dependencies(rosidl_default_runtime)
 
 ###########
 ## Build ##
 ###########
-include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
 
 # nodelets
-add_library(hdl_localization_nodelet
+add_library(${PROJECT_NAME}_lib SHARED
   src/hdl_localization/pose_estimator.cpp
   apps/hdl_localization_nodelet.cpp
+  apps/globalmap_server_nodelet.cpp
 )
-target_link_libraries(hdl_localization_nodelet
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
+ament_target_dependencies(${PROJECT_NAME}_lib
+  rclcpp
+  tf2_ros
+  tf2_geometry_msgs
+  tf2_eigen
+  pcl_ros
+  pcl_conversions
+  sensor_msgs
+  geometry_msgs
+  nav_msgs
+  ndt_omp
+  fast_gicp
+  hdl_global_localization
 )
-add_dependencies(hdl_localization_nodelet ${PROJECT_NAME}_gencpp)
-
-
-add_library(globalmap_server_nodelet apps/globalmap_server_nodelet.cpp)
-target_link_libraries(globalmap_server_nodelet
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
+rosidl_target_interfaces(${PROJECT_NAME}_lib
+  ${PROJECT_NAME}
+  rosidl_typesupport_cpp
+)
+target_include_directories(${PROJECT_NAME}_lib PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+rclcpp_components_register_node(${PROJECT_NAME}_lib
+  PLUGIN "${PROJECT_NAME}::HdlLocalizationNodelet"
+  EXECUTABLE ${PROJECT_NAME}_node
+)
+rclcpp_components_register_node(${PROJECT_NAME}_lib
+  PLUGIN "${PROJECT_NAME}::GlobalmapServerNodelet"
+  EXECUTABLE ${PROJECT_NAME}_map_server
 )
 
+install(
+  TARGETS
+    ${PROJECT_NAME}_lib
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(
+  DIRECTORY
+    launch
+    rviz
+  DESTINATION share/${PROJECT_NAME}
+)
+
+ament_package()
