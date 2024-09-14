@@ -1,0 +1,34 @@
+globalmap_server_node:
+  ros__parameters:
+    globalmap_pcd: ""
+    convert_utm_to_local: True
+    downsample_resolution: 0.1
+
+hdl_localization_node:
+  ros__parameters:
+    odom_child_frame_id: "base_link"
+    robot_odom_frame_id: "odom"
+    use_imu: True
+    invert_acc: False
+    invert_gyro: False
+    cool_time_duration: 2.0
+    enable_robot_odometry_prediction: False
+    # Registration Method Setting
+    # available reg_methods: PCL_OMP, NDT_CUDA_P2D, NDT_CUDA_D2D
+    reg_method: "PCL_OMP"
+    # Nearest Search Method
+    # available ndt_neighbor_search_method: DIRECT1/7/21/RADIUS, KDTREE
+    ndt_neighbor_search_method: "DIRECT7"
+    ndt_neighbor_search_radius: 2.0
+    ndt_resolution: 1.0
+    downsample_resolution: 1.0
+    # if "specify_init_pose" is true, pose estimator will be initialized with the following params
+    # otherwise, you need to input an initial pose with "2D Pose Estimate" on rviz"
+    specify_init_pose: True
+    init_pos_x: 0.0
+    init_pos_y: 0.0
+    init_pos_z: 0.0
+    init_ori_w: 1.0
+    init_ori_x: 0.0
+    init_ori_y: 0.0
+    init_ori_z: 0.0
