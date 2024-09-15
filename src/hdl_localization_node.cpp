@@ -5,6 +5,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <pcl_ros/transforms.hpp>
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl_ros/point_cloud.h>
 
 #include <tf2_eigen/tf2_eigen.hpp>
 #include <tf2_ros/transform_listener.h>
@@ -19,7 +20,7 @@
 
 #include <pcl/filters/voxel_grid.h>
 #include <pclomp/ndt_omp.h>
-#include <fast_gicp/ndt/ndt_cuda.hpp>
+// #include <fast_gicp/ndt/ndt_cuda.hpp>
 
 #include <hdl_localization/pose_estimator.hpp>
 #include <hdl_localization/delta_estimater.hpp>
@@ -143,30 +144,30 @@ class HdlLocalizationNode : public rclcpp::Node {
                     ndt->setNeighborhoodSearchMethod(pclomp::KDTREE);
                 }
                 return ndt;
-            } else if(reg_method.find("NDT_CUDA") != std::string::npos) {
-                RCLCPP_INFO(get_logger(), "NDT_CUDA is selected");
-                boost::shared_ptr<fast_gicp::NDTCuda<PointT, PointT>> ndt(new fast_gicp::NDTCuda<PointT, PointT>);
-                ndt->setResolution(ndt_resolution);
+            // } else if(reg_method.find("NDT_CUDA") != std::string::npos) {
+            //     RCLCPP_INFO(get_logger(), "NDT_CUDA is selected");
+            //     boost::shared_ptr<fast_gicp::NDTCuda<PointT, PointT>> ndt(new fast_gicp::NDTCuda<PointT, PointT>);
+            //     ndt->setResolution(ndt_resolution);
 
-                if(reg_method.find("D2D") != std::string::npos) {
-                    ndt->setDistanceMode(fast_gicp::NDTDistanceMode::D2D);
-                } else if (reg_method.find("P2D") != std::string::npos) {
-                    ndt->setDistanceMode(fast_gicp::NDTDistanceMode::P2D);
-                }
+            //     if(reg_method.find("D2D") != std::string::npos) {
+            //         ndt->setDistanceMode(fast_gicp::NDTDistanceMode::D2D);
+            //     } else if (reg_method.find("P2D") != std::string::npos) {
+            //         ndt->setDistanceMode(fast_gicp::NDTDistanceMode::P2D);
+            //     }
 
-                if (ndt_neighbor_search_method == "DIRECT1") {
-                    RCLCPP_INFO(get_logger(), "search_method DIRECT1 is selected");
-                    ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT1);
-                } else if (ndt_neighbor_search_method == "DIRECT7") {
-                    RCLCPP_INFO(get_logger(), "search_method DIRECT7 is selected");
-                    ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT7);
-                } else if (ndt_neighbor_search_method == "DIRECT_RADIUS") {
-                    RCLCPP_INFO_STREAM(get_logger(), "search_method DIRECT_RADIUS is selected : " << ndt_neighbor_search_radius);
-                    ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT_RADIUS, ndt_neighbor_search_radius);
-                } else {
-                    RCLCPP_WARN(get_logger(), "invalid search method was given");
-                }
-                return ndt;
+            //     if (ndt_neighbor_search_method == "DIRECT1") {
+            //         RCLCPP_INFO(get_logger(), "search_method DIRECT1 is selected");
+            //         ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT1);
+            //     } else if (ndt_neighbor_search_method == "DIRECT7") {
+            //         RCLCPP_INFO(get_logger(), "search_method DIRECT7 is selected");
+            //         ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT7);
+            //     } else if (ndt_neighbor_search_method == "DIRECT_RADIUS") {
+            //         RCLCPP_INFO_STREAM(get_logger(), "search_method DIRECT_RADIUS is selected : " << ndt_neighbor_search_radius);
+            //         ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT_RADIUS, ndt_neighbor_search_radius);
+            //     } else {
+            //         RCLCPP_WARN(get_logger(), "invalid search method was given");
+            //     }
+            //     return ndt;
             }
 
             RCLCPP_ERROR_STREAM(get_logger(), "unknown registration method:" << reg_method);
@@ -569,7 +570,7 @@ class HdlLocalizationNode : public rclcpp::Node {
 
         // imu input buffer
         std::mutex imu_data_mutex;
-        std::vector<sensor_msgs::msg::Imu::ConstPtr> imu_data_list;
+        std::vector<sensor_msgs::msg::Imu::ConstSharedPtr> imu_data_list;
 
         // globalmap and registration method
         pcl::PointCloud<PointT>::Ptr globalmap;

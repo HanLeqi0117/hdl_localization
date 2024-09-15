@@ -20,9 +20,10 @@ find_package(rclpy REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 find_package(ndt_omp REQUIRED)
-find_package(fast_gicp REQUIRED)
+# find_package(fast_gicp REQUIRED)
 find_package(hdl_global_localization REQUIRED)
 find_package(PCL 1.12 REQUIRED)
 
@@ -56,13 +57,11 @@ ament_export_dependencies(rosidl_default_runtime)
 ## Build ##
 ###########
 # ament_auto_find_build_dependencies()
-
-add_library(${PROJECT_NAME}_lib SHARED
-  src/hdl_localization/pose_estimator.cpp
+add_executable(hdl_localization_node 
   src/hdl_localization_node.cpp
-  src/globalmap_server_node.cpp
+  src/hdl_localization/pose_estimator.cpp
 )
-ament_target_dependencies(${PROJECT_NAME}_lib
+ament_target_dependencies(hdl_localization_node
   rclcpp
   tf2_ros
   tf2_geometry_msgs
@@ -74,33 +73,42 @@ ament_target_dependencies(${PROJECT_NAME}_lib
   nav_msgs
   std_srvs
   ndt_omp
-  fast_gicp
+  # fast_gicp
   hdl_global_localization
 )
-rosidl_target_interfaces(${PROJECT_NAME}_lib
+rosidl_target_interfaces(hdl_localization_node
   ${PROJECT_NAME}
   rosidl_typesupport_cpp
 )
-target_include_directories(${PROJECT_NAME}_lib PUBLIC
+target_include_directories(hdl_localization_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
 
-add_executable(hdl_localization_node 
-  src/hdl_localization_node.cpp
-)
-target_link_libraries(hdl_localization_node
-  ${PROJECT_NAME}_lib
-)
 
 add_executable(globalmap_server_node 
   src/globalmap_server_node.cpp
 )
-target_link_libraries(globalmap_server_node
-  ${PROJECT_NAME}_lib
+ament_target_dependencies(globalmap_server_node
+  rclcpp
+  tf2_ros
+  pcl_conversions
+  sensor_msgs
+  std_msgs
+  geometry_msgs
+  nav_msgs
+  std_srvs
+  # fast_gicp
+  hdl_global_localization
+)
+target_include_directories(globalmap_server_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
 )
 
-# install launch, config, rviz etc.
+# install exec,launch, config, rviz etc.
+install(TARGETS hdl_localization_node DESTINATION lib/${PROJECT_NAME})
+install(TARGETS globalmap_server_node DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY scripts DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
