@@ -32,7 +32,7 @@ def generate_launch_description():
         parameters=[{
             "config_path" : os.path.join(
                 get_package_share_directory("hdl_global_localization"),
-                "config", "config.json"
+                "config"
             )
         }],
         output="screen"
