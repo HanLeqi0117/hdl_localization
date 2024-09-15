@@ -3,8 +3,7 @@
 #include <iostream>
 
 #include <rclcpp/rclcpp.hpp>
-#include <pcl_ros/point_cloud.hpp>
-#include <tf2_bullet/tf2_bullet.hpp>
+#include <pcl_conversions/pcl_conversions.h>
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <std_msgs/msg/string.hpp>
@@ -17,25 +16,24 @@ namespace hdl_localization {
 class GlobalmapServerNode : public rclcpp::Node {
     public:
         using PointT = pcl::PointXYZI;
-        using std::placeholders;
-        using std::chrono_literals;
 
-        GlobalmapServerNode(const std::string& node_name, const rclcpp::NodeOptions& options) : GlobalmapServerNode(node_name, options){
+        GlobalmapServerNode(const std::string node_name, const rclcpp::NodeOptions options) : Node(node_name, options){
 
             // Get the Point Cloud Data from a pcd file and downsample the Point Cloud Data.
             // If the Point Cloud Map is made in UTM Environment, Change the UTM coordinate into Local coordinate
             initialize_parameters();
 
             // publish globalmap with "latched" publisher
-            auto global_map_qos = rclcpp::SystemDefaultsQoS();
-            global_map_qos.get_rmw_qos_profile().depth = 5;
-            global_map_qos.get_rmw_qos_profile().reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
-            global_map_qos.get_rmw_qos_profile().durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+            // auto global_map_qos = rclcpp::SystemDefaultsQoS();
+            // global_map_qos.get_rmw_qos_profile().depth = 5;
+            // global_map_qos.get_rmw_qos_profile().reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+            // global_map_qos.get_rmw_qos_profile().durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+            auto global_map_qos = rclcpp::QoS(1).transient_local();
             globalmap_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("global_map", global_map_qos);
             // When get a PointCloud Data, publish it as a new PointCloud Map.
-            map_update_sub = this->create_subscription<std_msgs::msg::String>("map_request/pcd", 10, std::bind(&map_update_callback, this, _1));
+            map_update_sub = this->create_subscription<std_msgs::msg::String>("map_request/pcd", 1, std::bind(&GlobalmapServerNode::map_update_callback, this, std::placeholders::_1));
             // Publish the Point Cloud Map which was downsampled.
-            globalmap_pub_timer = this->create_wall_timer(1s, std::bind(&GlobalmapServerNode::pub_once_cb, this));
+            globalmap_pub_timer = this->create_wall_timer(std::chrono::seconds(1), std::bind(&GlobalmapServerNode::pub_once_cb, this));
 
         }
         virtual ~GlobalmapServerNode(){}
@@ -90,17 +88,25 @@ class GlobalmapServerNode : public rclcpp::Node {
             voxelgrid->filter(*filtered);
 
             globalmap = filtered;
-            globalmap_pub->publish(globalmap);
+            // globalmap_pub->publish(globalmap);
+            sensor_msgs::msg::PointCloud2 globalmap_msg;
+            pcl::toROSMsg(*globalmap, globalmap_msg);            
+            
+            globalmap_pub->publish(globalmap_msg);
+
         }
 
         void pub_once_cb() {
-            globalmap_pub->publish(globalmap);
+            sensor_msgs::msg::PointCloud2 globalmap_msg;
+            pcl::toROSMsg(*globalmap, globalmap_msg);            
+            globalmap_pub->publish(globalmap_msg);
+            globalmap_pub_timer.reset();
         }
         
     private:
 
         rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr globalmap_pub;
-        rclcpp::Subscription<std::msg::String>::SharedPtr map_update_sub;
+        rclcpp::Subscription<std_msgs::msg::String>::SharedPtr map_update_sub;
         rclcpp::TimerBase::SharedPtr globalmap_pub_timer;
 
         pcl::PointCloud<PointT>::Ptr globalmap;

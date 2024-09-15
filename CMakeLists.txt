@@ -1,25 +1,14 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.15)
 project(hdl_localization)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
-
-# -mavx causes a lot of errors!!
-if("$ENV{ROS_DISTRO}" STRGREATER "melodic")
-  add_definitions(-std=c++17 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2)
-  set(CMAKE_CXX_FLAGS "-std=c++17 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2")
-else()
-  add_definitions(-std=c++11 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2)
-  set(CMAKE_CXX_FLAGS "-std=c++11 -msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2")
-endif()
-
-# pcl 1.7 causes a segfault when it is built with debug mode
-set(CMAKE_BUILD_TYPE "RELEASE")
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
@@ -30,8 +19,9 @@ find_package(pcl_ros REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
-find_package(pclomp REQUIRED)
+find_package(ndt_omp REQUIRED)
 find_package(fast_gicp REQUIRED)
 find_package(hdl_global_localization REQUIRED)
 find_package(PCL 1.12 REQUIRED)
@@ -56,31 +46,59 @@ endif()
 find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ScanMatchingStatus.msg"
-  DEPENDENCIES std_msgs geometry_msgs 
+  DEPENDENCIES 
+  std_msgs 
+  geometry_msgs 
 )
 ament_export_dependencies(rosidl_default_runtime)
 
 ###########
 ## Build ##
 ###########
-ament_auto_find_build_dependencies()
+# ament_auto_find_build_dependencies()
 
-# include
-target_include_directories(hdl_localization_node PUBLIC
-  include
-)
-
-# add executalbe
-ament_auto_add_executable(hdl_localization_node
-  src/hdl_localization_node.cpp
+add_library(${PROJECT_NAME}_lib SHARED
   src/hdl_localization/pose_estimator.cpp
-)
-ament_auto_add_executable(globalmap_server_node
+  src/hdl_localization_node.cpp
   src/globalmap_server_node.cpp
 )
+ament_target_dependencies(${PROJECT_NAME}_lib
+  rclcpp
+  tf2_ros
+  tf2_geometry_msgs
+  tf2_eigen
+  pcl_ros
+  pcl_conversions
+  sensor_msgs
+  geometry_msgs
+  nav_msgs
+  std_srvs
+  ndt_omp
+  fast_gicp
+  hdl_global_localization
+)
+rosidl_target_interfaces(${PROJECT_NAME}_lib
+  ${PROJECT_NAME}
+  rosidl_typesupport_cpp
+)
+target_include_directories(${PROJECT_NAME}_lib PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 
-# link to message interfaces
-rosidl_target_interfaces(hdl_localization_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+add_executable(hdl_localization_node 
+  src/hdl_localization_node.cpp
+)
+target_link_libraries(hdl_localization_node
+  ${PROJECT_NAME}_lib
+)
+
+add_executable(globalmap_server_node 
+  src/globalmap_server_node.cpp
+)
+target_link_libraries(globalmap_server_node
+  ${PROJECT_NAME}_lib
+)
 
 # install launch, config, rviz etc.
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
@@ -100,4 +118,4 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_package()
+ament_auto_package()

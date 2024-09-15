@@ -54,12 +54,12 @@ PoseEstimator::~PoseEstimator() {}
  * @param gyro     angular velocity
  */
 void PoseEstimator::predict(const rclcpp::Time& stamp) {
-  if ((stamp - init_stamp).toSec() < cool_time_duration || prev_stamp.is_zero() || prev_stamp == stamp) {
+  if ((stamp - init_stamp).seconds() < cool_time_duration || prev_stamp.nanoseconds() == 0 || prev_stamp == stamp) {
     prev_stamp = stamp;
     return;
   }
 
-  double dt = (stamp - prev_stamp).toSec();
+  double dt = (stamp - prev_stamp).seconds();
   prev_stamp = stamp;
 
   ukf->setProcessNoiseCov(process_noise * dt);
@@ -75,12 +75,12 @@ void PoseEstimator::predict(const rclcpp::Time& stamp) {
  * @param gyro     angular velocity
  */
 void PoseEstimator::predict(const rclcpp::Time& stamp, const Eigen::Vector3f& acc, const Eigen::Vector3f& gyro) {
-  if ((stamp - init_stamp).toSec() < cool_time_duration || prev_stamp.is_zero() || prev_stamp == stamp) {
+  if ((stamp - init_stamp).seconds() < cool_time_duration || prev_stamp.nanoseconds() == 0 || prev_stamp == stamp) {
     prev_stamp = stamp;
     return;
   }
 
-  double dt = (stamp - prev_stamp).toSec();
+  double dt = (stamp - prev_stamp).seconds();
   prev_stamp = stamp;
 
   ukf->setProcessNoiseCov(process_noise * dt);

@@ -14,8 +14,8 @@ hdl_localization_node:
     cool_time_duration: 2.0
     enable_robot_odometry_prediction: False
     # Registration Method Setting
-    # available reg_methods: PCL_OMP, NDT_CUDA_P2D, NDT_CUDA_D2D
-    reg_method: "PCL_OMP"
+    # available reg_methods: NDT_OMP, NDT_CUDA_P2D, NDT_CUDA_D2D
+    reg_method: "NDT_OMP"
     # Nearest Search Method
     # available ndt_neighbor_search_method: DIRECT1/7/21/RADIUS, KDTREE
     ndt_neighbor_search_method: "DIRECT7"
