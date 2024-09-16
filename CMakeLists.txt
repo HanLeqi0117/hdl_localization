@@ -23,9 +23,10 @@ find_package(std_srvs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 find_package(ndt_omp REQUIRED)
-# find_package(fast_gicp REQUIRED)
+find_package(fast_gicp REQUIRED)
+find_package(small_gicp REQUIRED)
 find_package(hdl_global_localization REQUIRED)
-find_package(PCL 1.12 REQUIRED)
+find_package(PCL REQUIRED)
 
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
@@ -73,7 +74,8 @@ ament_target_dependencies(hdl_localization_node
   nav_msgs
   std_srvs
   ndt_omp
-  # fast_gicp
+  fast_gicp
+  small_gicp
   hdl_global_localization
 )
 rosidl_target_interfaces(hdl_localization_node
@@ -95,11 +97,6 @@ ament_target_dependencies(globalmap_server_node
   pcl_conversions
   sensor_msgs
   std_msgs
-  geometry_msgs
-  nav_msgs
-  std_srvs
-  # fast_gicp
-  hdl_global_localization
 )
 target_include_directories(globalmap_server_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
