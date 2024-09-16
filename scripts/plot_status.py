@@ -4,12 +4,12 @@ from rclpy.node import Node
 import numpy, sys
 import scipy.spatial
 from matplotlib import pyplot
-from hdl_localization.msg import *
+from hdl_localization.msg import ScanMatchingStatus
 
 
 class Plotter(Node, object):
 	def __init__(self):
-		super(Node).__init__("plot_status")
+		super().__init__("plot_status")
 		pyplot.ion()
 		pyplot.show(block=False)
 
@@ -23,7 +23,7 @@ class Plotter(Node, object):
 		if len(self.status_buffer) > 50:
 			self.status_buffer = self.status_buffer[-50:]
 
-	def timer_callback(self, event):
+	def timer_callback(self):
 		if len(self.status_buffer) < 2:
 			return
 

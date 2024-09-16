@@ -118,7 +118,7 @@ int main(int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
     rclcpp::NodeOptions options;
-    options.automatically_declare_parameters_from_overrides(true);
+    options.automatically_declare_parameters_from_overrides(false);
     rclcpp::spin(std::make_shared<hdl_localization::GlobalmapServerNode>("globalmap_server_node", options));
 
     rclcpp::shutdown();

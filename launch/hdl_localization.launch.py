@@ -8,6 +8,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, FindExecutable
 from launch.conditions import IfCondition
 from launch_ros.actions import Node
+from whill_navi2.modules.ros2_launch_utils import DataPath, get_param_dict
 
 def generate_launch_description():
     
@@ -15,12 +16,15 @@ def generate_launch_description():
         get_package_share_directory("hdl_localization"),
         "config", "params.yaml"
     )
+    data_path = DataPath()
+    globalmap_server_config_dict = get_param_dict(config_path, "globalmap_server_node")
+    globalmap_server_config_dict["globalmap_pcd"] = os.path.join(data_path.pcd_map_dir_path, "glim_pcd.pcd")
     
     ld = LaunchDescription()
     
-    ld.add_action(DeclareLaunchArgument("point_cloud_topic", "velodyne_points"))
+    ld.add_action(DeclareLaunchArgument(name="point_cloud_topic", default_value="velodyne_points"))
     point_cloud_topic = LaunchConfiguration("point_cloud_topic")
-    ld.add_action(DeclareLaunchArgument("imu_topic", "/adis/imu/data"))
+    ld.add_action(DeclareLaunchArgument(name="imu_topic", default_value="adis/imu/data"))
     imu_topic = LaunchConfiguration("imu_topic")
     ld.add_action(DeclareLaunchArgument(name="plot_estimation_errors", default_value="False", choices=["False", "True", "false", "true"]))
     plot_estimation_errors = LaunchConfiguration("plot_estimation_errors")
@@ -43,7 +47,7 @@ def generate_launch_description():
         package="hdl_localization",
         executable="globalmap_server_node",
         name="globalmap_server_node",
-        parameters=[config_path],
+        parameters=[globalmap_server_config_dict],
         output="screen"
     )
     ld.add_action(globalmap_server_node)
@@ -55,7 +59,7 @@ def generate_launch_description():
         parameters=[config_path],
         remappings=[
             ("velodyne_points", point_cloud_topic),
-            ("imu_data", imu_topic)
+            ("imu_data", imu_topic),
         ],
         output="screen"
     )
@@ -63,7 +67,7 @@ def generate_launch_description():
     
     plot_status = ExecuteProcess(
         cmd=[
-            FindExecutable("python3"),
+            FindExecutable(name="python3"),
             os.path.join(
                 get_package_share_directory("hdl_localization"),
                 "scripts", "plot_status.py"
