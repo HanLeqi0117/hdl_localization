@@ -21,7 +21,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pclomp/ndt_omp.h>
 #include <fast_gicp/ndt/ndt_cuda.hpp>
-// #include <small_gicp/pcl/pcl_registration.hpp>
+#include <small_gicp/pcl/pcl_registration.hpp>
 
 #include <hdl_localization/pose_estimator.hpp>
 #include <hdl_localization/delta_estimater.hpp>
@@ -64,6 +64,10 @@ class HdlLocalizationNode : public rclcpp::Node {
             // The scale of voxel
             ndt_resolution = declare_parameter<double>("ndt_resolution", 1.0);
             enable_robot_odometry_prediction = declare_parameter<bool>("enable_robot_odometry_prediction", false);
+            gicp_thread_num = declare_parameter<int>("gicp_thread_num", 4);
+            gicp_neighbors_num = declare_parameter<int>("gicp_neighbors_num", 20);
+            gicp_correspondence_distance = declare_parameter<double>("gicp_correspondence_distance", 1.0);
+            gicp_voxel_resolution = declare_parameter<double>("gicp_voxel_resolution", 1.0);
             // Get the frame id of the odometry and robot_base
             // Use IMU Data or not and invert the acc data and gyro data in IMU Data or not.
             use_imu = this->declare_parameter<bool>("use_imu", true);
@@ -145,10 +149,28 @@ class HdlLocalizationNode : public rclcpp::Node {
                     ndt->setNeighborhoodSearchMethod(pclomp::KDTREE);
                 }
                 return ndt;
-            // } else if (reg_method.find("GICP") != std::string::npos) {
-            //     if (reg_method.find("VGICP")) {
-            //         RCLCPP_INFO(get_logger(), "VGICP is selected");
-            //     }
+            } else if (reg_method.find("GICP") != std::string::npos) {
+                if (reg_method.find("VGICP")) {
+                    RCLCPP_INFO(get_logger(), "VGICP is selected");
+                    small_gicp::RegistrationPCL<PointT, PointT>::Ptr gicp(new small_gicp::RegistrationPCL<PointT, PointT>());
+                    gicp->setNumThreads(gicp_thread_num);
+                    gicp->setCorrespondenceRandomness(gicp_neighbors_num);
+                    gicp->setMaxCorrespondenceDistance(gicp_correspondence_distance);
+                    gicp->setVoxelResolution(gicp_voxel_resolution);
+                    gicp->setRegistrationType("VGICP");
+                    
+                    return gicp;
+                } else {
+                    RCLCPP_INFO(get_logger(), "GICP is selected");
+                    small_gicp::RegistrationPCL<PointT, PointT>::Ptr gicp(new small_gicp::RegistrationPCL<PointT, PointT>());
+                    gicp->setNumThreads(gicp_thread_num);
+                    gicp->setCorrespondenceRandomness(gicp_neighbors_num);
+                    gicp->setMaxCorrespondenceDistance(gicp_correspondence_distance);
+                    gicp->setVoxelResolution(gicp_voxel_resolution);
+                    gicp->setRegistrationType("GICP");
+
+                    return gicp;
+                }
             } else if(reg_method.find("NDT_CUDA") != std::string::npos) {
                 RCLCPP_INFO(get_logger(), "NDT_CUDA is selected");
                 std::shared_ptr<fast_gicp::NDTCuda<PointT, PointT>> ndt(new fast_gicp::NDTCuda<PointT, PointT>);
@@ -601,7 +623,12 @@ class HdlLocalizationNode : public rclcpp::Node {
         double cool_time_duration;
         double ndt_neighbor_search_radius;
         double ndt_resolution;
+        double gicp_correspondence_distance;
+        double gicp_voxel_resolution;
+        int gicp_thread_num;
+        int gicp_neighbors_num;
 
+        
         // imu input buffer
         std::mutex imu_data_mutex;
         std::vector<sensor_msgs::msg::Imu::ConstSharedPtr> imu_data_list;

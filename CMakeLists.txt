@@ -24,7 +24,6 @@ find_package(std_msgs REQUIRED)
 
 find_package(ndt_omp REQUIRED)
 find_package(fast_gicp REQUIRED)
-find_package(small_gicp REQUIRED)
 find_package(hdl_global_localization REQUIRED)
 find_package(PCL REQUIRED)
 
@@ -57,7 +56,8 @@ ament_export_dependencies(rosidl_default_runtime)
 ###########
 ## Build ##
 ###########
-# ament_auto_find_build_dependencies()
+ament_auto_find_build_dependencies()
+
 add_executable(hdl_localization_node 
   src/hdl_localization_node.cpp
   src/hdl_localization/pose_estimator.cpp
@@ -75,7 +75,6 @@ ament_target_dependencies(hdl_localization_node
   std_srvs
   ndt_omp
   fast_gicp
-  small_gicp
   hdl_global_localization
 )
 rosidl_target_interfaces(hdl_localization_node
@@ -86,7 +85,6 @@ target_include_directories(hdl_localization_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-
 
 add_executable(globalmap_server_node 
   src/globalmap_server_node.cpp

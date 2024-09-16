@@ -48,15 +48,15 @@ class GlobalmapServerNode : public rclcpp::Node {
 
             std::ifstream utm_file(globalmap_pcd + ".utm");
             if (utm_file.is_open() && this->declare_parameter<bool>("convert_utm_to_local", true)) {
-            double utm_easting;
-            double utm_northing;
-            double altitude;
-            utm_file >> utm_easting >> utm_northing >> altitude;
-            for(auto& pt : globalmap->points) {
-                pt.getVector3fMap() -= Eigen::Vector3f(utm_easting, utm_northing, altitude);
-            }
-            RCLCPP_INFO_STREAM(get_logger(), "Global map offset by UTM reference coordinates (x = "
-                            << utm_easting << ", y = " << utm_northing << ") and altitude (z = " << altitude << ")");
+                double utm_easting;
+                double utm_northing;
+                double altitude;
+                utm_file >> utm_easting >> utm_northing >> altitude;
+                for(auto& pt : globalmap->points) {
+                    pt.getVector3fMap() -= Eigen::Vector3f(utm_easting, utm_northing, altitude);
+                }
+                RCLCPP_INFO_STREAM(get_logger(), "Global map offset by UTM reference coordinates (x = "
+                                << utm_easting << ", y = " << utm_northing << ") and altitude (z = " << altitude << ")");
             }
 
             // downsample globalmap
