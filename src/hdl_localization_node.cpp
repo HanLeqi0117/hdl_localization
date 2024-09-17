@@ -338,17 +338,17 @@ class HdlLocalizationNode : public rclcpp::Node {
             auto aligned = pose_estimator->correct(stamp, filtered);
 
             if(aligned_pub->get_subscription_count()) {
-            aligned->header.frame_id = "map";
-            aligned->header.stamp = cloud->header.stamp;
+                aligned->header.frame_id = "map";
+                aligned->header.stamp = cloud->header.stamp;
 
-            sensor_msgs::msg::PointCloud2 globalmap_msg;
-            pcl::toROSMsg(*aligned, globalmap_msg);            
-            
-            aligned_pub->publish(globalmap_msg);
+                sensor_msgs::msg::PointCloud2 globalmap_msg;
+                pcl::toROSMsg(*aligned, globalmap_msg);            
+                
+                aligned_pub->publish(globalmap_msg);
             }
 
             if(status_pub->get_subscription_count()) {
-            publish_scan_matching_status(points_msg->header, aligned);
+                publish_scan_matching_status(points_msg->header, aligned);
             }
 
             publish_odometry(rclcpp::Time(points_msg->header.stamp, get_clock()->get_clock_type()), pose_estimator->matrix());
@@ -530,15 +530,11 @@ class HdlLocalizationNode : public rclcpp::Node {
          */
         void publish_odometry(const rclcpp::Time& stamp, const Eigen::Matrix4f& pose) {
             // broadcast the transform over tf
-            int stamp_sec = stamp.seconds();
-            uint32_t stamp_nanosec = stamp.nanoseconds() % int(1e9);
 
             if (send_tf_transforms){
                 if(tf_buffer->canTransform(robot_odom_frame_id, odom_child_frame_id, rclcpp::Time(0, 0, get_clock()->get_clock_type()))) {
                     geometry_msgs::msg::TransformStamped map_wrt_frame = tf2::eigenToTransform(Eigen::Isometry3d(pose.inverse().cast<double>()));
-                    // map_wrt_frame.header.stamp = stamp;
-                    map_wrt_frame.header.stamp.sec = stamp_sec;
-                    map_wrt_frame.header.stamp.nanosec = stamp_nanosec;
+                    map_wrt_frame.header.stamp = stamp;
                     map_wrt_frame.header.frame_id = odom_child_frame_id;
                     map_wrt_frame.child_frame_id = "map";
 
@@ -554,18 +550,14 @@ class HdlLocalizationNode : public rclcpp::Node {
 
                     geometry_msgs::msg::TransformStamped odom_trans;
                     odom_trans.transform = tf2::toMsg(odom_wrt_map);
-                    // odom_trans.header.stamp = stamp;
-                    odom_trans.header.stamp.sec = stamp_sec;
-                    odom_trans.header.stamp.nanosec = stamp_nanosec;
+                    odom_trans.header.stamp = stamp;
                     odom_trans.header.frame_id = "map";
                     odom_trans.child_frame_id = robot_odom_frame_id;
 
                     tf_broadcaster->sendTransform(odom_trans);
                 } else {
                     geometry_msgs::msg::TransformStamped odom_trans = tf2::eigenToTransform(Eigen::Isometry3d(pose.cast<double>()));
-                    // odom_trans.header.stamp = stamp;
-                    odom_trans.header.stamp.sec = stamp_sec;
-                    odom_trans.header.stamp.nanosec = stamp_nanosec;
+                    odom_trans.header.stamp = stamp;
                     odom_trans.header.frame_id = "map";
                     odom_trans.child_frame_id = odom_child_frame_id;
                     tf_broadcaster->sendTransform(odom_trans);
@@ -574,9 +566,7 @@ class HdlLocalizationNode : public rclcpp::Node {
 
             // publish the transform
             nav_msgs::msg::Odometry odom;
-            // odom.header.stamp = stamp;
-            odom.header.stamp.sec = stamp_sec;
-            odom.header.stamp.nanosec = stamp_nanosec;
+            odom.header.stamp = stamp;
             odom.header.frame_id = "map";
 
             odom.pose.pose = tf2::toMsg(Eigen::Isometry3d(pose.cast<double>()));
