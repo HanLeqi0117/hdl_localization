@@ -2,7 +2,7 @@ globalmap_server_node:
   ros__parameters:
     globalmap_pcd: ""
     convert_utm_to_local: False
-    downsample_resolution: 0.5
+    downsample_resolution: 0.1
 
 hdl_localization_node:
   ros__parameters:

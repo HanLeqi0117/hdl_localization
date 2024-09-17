@@ -29,7 +29,7 @@ class GlobalmapServerNode : public rclcpp::Node {
             // global_map_qos.get_rmw_qos_profile().reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
             // global_map_qos.get_rmw_qos_profile().durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
             auto global_map_qos = rclcpp::QoS(1).transient_local();
-            globalmap_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("global_map", global_map_qos);
+            globalmap_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("globalmap", global_map_qos);
             // When get a PointCloud Data, publish it as a new PointCloud Map.
             map_update_sub = this->create_subscription<std_msgs::msg::String>("map_request/pcd", 1, std::bind(&GlobalmapServerNode::map_update_callback, this, std::placeholders::_1));
             // Publish the Point Cloud Map which was downsampled.

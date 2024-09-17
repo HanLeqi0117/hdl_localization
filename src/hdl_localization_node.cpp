@@ -84,7 +84,7 @@ class HdlLocalizationNode : public rclcpp::Node {
             // Subscribe Real-Time scanning Point Cloud Topic
             points_sub = this->create_subscription<sensor_msgs::msg::PointCloud2>("velodyne_points", 5, std::bind(&HdlLocalizationNode::points_callback, this, std::placeholders::_1));
             // Subscribe global Point Cloud Map which is published by hdl_global_localization_nodlet
-            globalmap_sub = this->create_subscription<sensor_msgs::msg::PointCloud2>("global_map", latch_qos, std::bind(&HdlLocalizationNode::globalmap_callback, this, std::placeholders::_1));
+            globalmap_sub = this->create_subscription<sensor_msgs::msg::PointCloud2>("globalmap", latch_qos, std::bind(&HdlLocalizationNode::globalmap_callback, this, std::placeholders::_1));
             // Subscribe the initial pose
             initialpose_sub = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("initialpose", 8, std::bind(&HdlLocalizationNode::initialpose_callback, this, std::placeholders::_1));
 
