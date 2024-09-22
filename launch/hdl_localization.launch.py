@@ -58,8 +58,11 @@ def generate_launch_description():
         name="hdl_localization_node",
         parameters=[config_path],
         remappings=[
+            # Subscribe
             ("velodyne_points", point_cloud_topic),
             ("imu_data", imu_topic),
+            # Publish
+            ("odom", "hdl_localization/odom")
         ],
         output="screen"
     )
