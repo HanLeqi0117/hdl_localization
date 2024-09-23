@@ -189,7 +189,7 @@ class HdlLocalizationNode : public rclcpp::Node {
                     RCLCPP_INFO(get_logger(), "search_method DIRECT7 is selected");
                     ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT7);
                 } else if (ndt_neighbor_search_method == "DIRECT27") {
-                    RCLCPP_INFO(get_logger(), "search_method DIRECT7 is selected");
+                    RCLCPP_INFO(get_logger(), "search_method DIRECT27 is selected");
                     ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT27);
                 } else if (ndt_neighbor_search_method == "DIRECT_RADIUS") {
                     RCLCPP_INFO_STREAM(get_logger(), "search_method DIRECT_RADIUS is selected : " << ndt_neighbor_search_radius);
@@ -438,7 +438,7 @@ class HdlLocalizationNode : public rclcpp::Node {
          * @param res_future
          */
         void set_global_map_callback(const rclcpp::Client<hdl_global_localization::srv::SetGlobalMap>::SharedFuture res_future) {
-            RCLCPP_INFO(get_logger(), "Done!");
+            RCLCPP_INFO(get_logger(), "2D Global Grid Map Done!");
         }
 
         /**

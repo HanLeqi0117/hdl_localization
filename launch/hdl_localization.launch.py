@@ -39,6 +39,10 @@ def generate_launch_description():
                 "config"
             )
         }],
+        remappings=[
+            ("bbs/gridmap", "hdl_global_localization/bbs/gridmap"),
+            ("bbs/gridmap", "hdl_global_localization/bbs/gridmap")
+        ],
         output="screen"
     )
     ld.add_action(hdl_global_localization_node)    
