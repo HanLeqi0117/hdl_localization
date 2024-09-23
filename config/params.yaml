@@ -16,9 +16,10 @@ hdl_localization_node:
     enable_robot_odometry_prediction: True
     # Registration Method Setting
     # available reg_methods: NDT_OMP, NDT_CUDA_P2D, NDT_CUDA_D2D
-    reg_method: "NDT_OMP"
+    reg_method: "NDT_CUDA_P2D"
     # Nearest Search Method
-    # available ndt_neighbor_search_method: DIRECT1/7/21/RADIUS, KDTREE
+    # if the reg_method is NDT_OMP, available ndt_neighbor_search_method: DIRECT1/7/21, KDTREE
+    # otherwise, ndt_neighbor_search_method: DIRECT1/7/27, DIRECT_RADIUS
     ndt_neighbor_search_method: "DIRECT7"
     ndt_neighbor_search_radius: 2.0
     ndt_resolution: 1.0
@@ -33,3 +34,5 @@ hdl_localization_node:
     init_ori_x: 0.0
     init_ori_y: 0.0
     init_ori_z: 0.0
+
+    use_sim_time: False

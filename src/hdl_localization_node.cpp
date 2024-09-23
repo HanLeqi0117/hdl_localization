@@ -188,6 +188,9 @@ class HdlLocalizationNode : public rclcpp::Node {
                 } else if (ndt_neighbor_search_method == "DIRECT7") {
                     RCLCPP_INFO(get_logger(), "search_method DIRECT7 is selected");
                     ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT7);
+                } else if (ndt_neighbor_search_method == "DIRECT27") {
+                    RCLCPP_INFO(get_logger(), "search_method DIRECT7 is selected");
+                    ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT27);
                 } else if (ndt_neighbor_search_method == "DIRECT_RADIUS") {
                     RCLCPP_INFO_STREAM(get_logger(), "search_method DIRECT_RADIUS is selected : " << ndt_neighbor_search_radius);
                     ndt->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT_RADIUS, ndt_neighbor_search_radius);
