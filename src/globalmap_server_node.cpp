@@ -79,7 +79,13 @@ class GlobalmapServerNode : public rclcpp::Node {
             globalmap->header.frame_id = "map";
 
             // downsample globalmap
-            double downsample_resolution = this->declare_parameter<double>("downsample_resolution", 0.1);
+            double downsample_resolution;
+            if (!this->has_parameter("downsample_resolution")){
+                downsample_resolution = this->declare_parameter<double>("downsample_resolution", 0.1);
+            } else {
+                downsample_resolution = this->get_parameter("downsample_resolution").get_value<double>();
+            }
+            
             boost::shared_ptr<pcl::VoxelGrid<PointT>> voxelgrid(new pcl::VoxelGrid<PointT>());
             voxelgrid->setLeafSize(downsample_resolution, downsample_resolution, downsample_resolution);
             voxelgrid->setInputCloud(globalmap);
